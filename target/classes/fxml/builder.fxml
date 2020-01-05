@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="root" alignment="TOP_CENTER" focusTraversable="true" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#press" prefHeight="650.0" prefWidth="600.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="graphics.controllers.BuilderScene">
+   <children>
+      <MenuBar fx:id="menuBar" prefHeight="30.0" prefWidth="600.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem mnemonicParsing="false" onAction="#load" text="Load" />
+              <MenuItem fx:id="saveButton" mnemonicParsing="false" onAction="#save" text="Save" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+              <items>
+              <MenuItem mnemonicParsing="false" onAction="#clear" text="Clear" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <TextField fx:id="nameField" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" onKeyTyped="#changeName" prefWidth="256.0" promptText="Enter the level name (20 chars)" style="-fx-background-color: black; -fx-text-fill: white; -fx-border-color: white; -fx-border-width: 2; -fx-prompt-text-fill: gray;">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </TextField>
+      <AnchorPane fx:id="gameField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseDragged="#paint" onMousePressed="#paint" prefHeight="500.0" prefWidth="500.0" style="-fx-border-color: white; -fx-border-width: 4;">
+         <VBox.margin>
+            <Insets bottom="8.0" top="8.0" />
+         </VBox.margin>
+      </AnchorPane>
+      <HBox fx:id="colorsBox" alignment="BOTTOM_CENTER" prefHeight="100.0" prefWidth="600.0" spacing="4.0">
+         <children>
+            <Button fx:id="brickButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#brick" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: darkred; -fx-border-color: white;" text="BRICK" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="ironButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#iron" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: gray; -fx-border-color: white;" text="IRON" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="baseButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#base" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: purple; -fx-border-color: white;" text="BASE" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="airButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#air" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: black; -fx-border-color: white;" text="AIR" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="waterButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#water" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: blue; -fx-border-color: white;" text="WATER" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="iceButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#ice" prefHeight="100.0" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: aqua; -fx-border-color: white;" text="ICE" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+            <Button fx:id="leafButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#leaf" prefWidth="600.0" style="-fx-background-radius: 0; -fx-background-color: green; -fx-border-color: white;" text="LEAF" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets bottom="4.0" left="4.0" right="4.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>
