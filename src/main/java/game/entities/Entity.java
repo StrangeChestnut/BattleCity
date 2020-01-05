@@ -1,22 +1,32 @@
 package game.entities;
 
-import game.level.Location;
+import com.google.gson.annotations.Expose;
 
 public abstract class Entity {
-    private Location location;
+    @Expose
+    private int x;
+    @Expose
+    private int y;
+    @Expose
     private int health;
 
-    public Entity (Location location) {
-        this.location = location;
+    public Entity () {
         health = 1;
     }
 
-    public Location location() {
-        return location;
+
+    public int getX() {
+        return x;
+    }
+    public int getY() {
+        return y;
     }
 
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setX(int x) {
+        this.x = x;
+    }
+    public void setY(int y) {
+        this.y = y;
     }
 
     public int getHealth() {
@@ -25,6 +35,7 @@ public abstract class Entity {
     public void setHealth(int health) {
         this.health = health;
     }
+
     public boolean isDead() {
         return health <= 0;
     }

@@ -3,10 +3,10 @@ package game.entities;
 import java.util.Random;
 
 public enum Direction {
-    NORTH (-1, 0),
-    WEST(0, -1),
-    SOUTH(1, 0),
-    EAST(0, 1) ;
+    WEST(-1, 0),
+    NORTH(0, -1),
+    EAST(1, 0),
+    SOUTH(0, 1) ;
 
     private int[] v;
 
@@ -22,16 +22,16 @@ public enum Direction {
         Direction direction = null;
         switch (new Random().nextInt(4)) {
             case 0:
-                direction = Direction.NORTH;
-                break;
-            case 1:
-                direction = Direction.SOUTH;
-                break;
-            case 2:
                 direction = Direction.WEST;
                 break;
-            case 3:
+            case 1:
                 direction = Direction.EAST;
+                break;
+            case 2:
+                direction = Direction.NORTH;
+                break;
+            case 3:
+                direction = Direction.SOUTH;
                 break;
         }
         return direction;

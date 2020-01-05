@@ -1,116 +1,156 @@
 package game.level;
 
+import com.google.gson.annotations.Expose;
 import game.entities.MobileEntity;
 import game.entities.mobiles.Bullet;
 import game.entities.mobiles.Player;
 import game.entities.mobiles.Tank;
-import game.entities.statics.*;
+import game.entities.mobiles.TankType;
+import game.entities.statics.Block;
+import game.entities.statics.BlockType;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class Level {
-    public static final int size = 26;
-    private Tile[][] map;
-    private Block[][] base;
-    private int[] spawn;
+    private String name;
 
-    private ArrayList<Bullet> bullets;
-    private ArrayList<Tank> spawnedTanks;
-    private ArrayList<Tank> waitingTanks;
+    public static final int SIZE = 26;
+    public static final int TANKS = 4;
+    public static final int QUEUE_SIZE = 20;
+    public static final int[] SPAWN = new int[]{9, 24};
 
-    private Level() {
-        map = new Tile[size][size];
-        spawn = new int[]{24, 0};
-        base = new Block[2][2];
 
-        bullets = new ArrayList<>();
-        spawnedTanks = new ArrayList<>();
-        waitingTanks = new ArrayList<>();
+    @Expose
+    private Player player;
+    @Expose
+    private Block[][] map;
+    @Expose
+    private List<TankType> queue;
+    @Expose
+    private List<Tank> enemies;
+
+    private List<Tank> deadEnemies;
+    private List<Block> base;
+
+    public Level() {
+        map = new Block[SIZE][SIZE];
+
+        base = new ArrayList<>(4);
+
+        enemies = new ArrayList<>(TANKS);
+        deadEnemies = new ArrayList<>(TANKS);
+        queue = new ArrayList<>(QUEUE_SIZE);
 
         initMap();
-        initTanks();
-    }
-
-    public Level(String filePath) {
-        this();
     }
 
     private void initMap() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                Tile tile = new Tile(i, j);
-                map[i][j] = tile;
-                tile.setBlock(new Block(tile, BlockType.AIR));
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                map[i][j] = BlockType.AIR.createBlock(i, j);
             }
         }
     }
 
-    private void initTanks() {
-        for (int i = 0; i < 8; i++) {
-            waitingTanks.add(new Tank());
+    public void initTanks() {
+        enemies = new ArrayList<>(TANKS);
+
+        if (queue.isEmpty()) {
+            for (int i = 0; i < QUEUE_SIZE; i++) {
+                queue.add(TankType.random());
+            }
         }
     }
 
-    public void spawnTank() {
-        Location location = Location.random(map);
-        Tank tank = waitingTanks.remove(0);
-
-        location.set(tank);
-        tank.setLocation(location);
-
-        spawnedTanks.add(tank);
+    public void destroy(Tank tank) {
+        if (enemies.remove(tank)) {
+            Location.remove(tank, map);
+            deadEnemies.add(tank);
+        }
     }
 
-    public boolean enemiesIsDead() {
-        return spawnedTanks.isEmpty() && waitingTanks.isEmpty();
+    public Tank trySpawnTank() {
+        if (!queue.isEmpty() && enemies.size() < 4) {
+            Tank tank = queue.remove(0).createTank(map);
+            Location.random(map).add(tank);
+            enemies.add(tank);
+            return tank;
+        }
+        return null;
     }
 
     public boolean baseIsBreak() {
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                if (base[i][j].isDead()) return true;
+        if (base.isEmpty()) {
+            return false;
+        }
+
+        for (Block block : base) {
+            if (block.isDead()) {
+                return true;
             }
         }
         return false;
     }
-    public boolean hasEnemyTank(Tank tank) {
-        return spawnedTanks.contains(tank);
-    }
-
-    public void addPlayer(Player player) {
-        Location location = new Location(map, spawn[0], spawn[1]);
-        player.setLocation(location);
-        location.set(player);
-        player.setLevel(this);
-    }
-
-    public void deleteEntity(MobileEntity entity) {
-        entity.location().clear(entity);
-        bullets.remove(entity);
-        spawnedTanks.remove(entity);
-    }
 
 
+    public boolean allEnemiesIsDead() {
+        return queue.isEmpty() && enemies.isEmpty();
+    }
 
-    public Tile[][] map() {
-        return map;
+    public List<Tank> getEnemies() {
+        return enemies;
     }
-    public ArrayList<Tank> spawnedTanks() {
-        return spawnedTanks;
+
+    public List<Tank> getTanks() {
+        List<Tank> tanks = new ArrayList<>(enemies);
+        tanks.add(player);
+        return tanks;
     }
-    public ArrayList<Tank> waitingTanks() {
-        return waitingTanks;
-    }
-    public ArrayList<Bullet> bullets() {
+
+    public List<Bullet> getBullets() {
+        List<Bullet> bullets = new ArrayList<>();
+
+        List<Tank> tanks = new ArrayList<>(getTanks());
+        tanks.addAll(deadEnemies);
+
+        for (Tank tank : tanks) {
+            Bullet bullet = tank.getBullet();
+            if (bullet.isFly()) {
+                bullets.add(bullet);
+            }
+        }
         return bullets;
     }
-    public void addBullet(Bullet bullet) {
-        bullets.add(bullet);
+
+    public List<MobileEntity> getMobiles() {
+        List<MobileEntity> entities = new ArrayList<>(getTanks());
+        entities.addAll(getBullets());
+        return entities;
     }
 
-    public ArrayList<MobileEntity> entities() {
-        ArrayList<MobileEntity> entities = new ArrayList<>();
-        entities.addAll(bullets);
-        entities.addAll(spawnedTanks);
-        return entities;
+    public String getName() {
+        return name;
+    }
+    public void setName(String text) {
+        name = text;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Block[][] getMap() {
+        return map;
+    }
+    public List<Block> getBase() {
+        return base;
+    }
+
+    public List<TankType> getQueue() {
+        return queue;
     }
 }

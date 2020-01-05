@@ -1,41 +1,33 @@
 package game.entities.mobiles;
 
+import com.google.gson.annotations.Expose;
 import game.entities.MobileEntity;
 import game.level.Location;
+import game.entities.statics.Block;
 
 public class Bullet extends MobileEntity {
-    private Tank tank;
+    @Expose
+    private boolean isFly;
 
     Bullet(Tank tank) {
-        super(tank.location(), tank.getDirection(), tank.bulletSpeed());
-        this.tank = tank;
+        super(tank.getX(), tank.getY(), tank.getDirection(), tank.getBulletSpeed(), tank.isEnemy());
+        isFly = true;
     }
 
-    public Tank tank() {
-        return tank;
-    }
-
-    public boolean flyTo(Bullet bullet) {
-        int number = location().contains(bullet);
-        return number == 2 ? (getDirection().isOpposite(bullet.getDirection())) : number == 4;
+    protected Bullet() {
+        super(0, 0, null, 1, true);
     }
 
     @Override
-    public void move() {
-        try {
-            updMoveCldwn();
-            if (moveCooldown() == 0) {
-                Location location = location();
-                Location newLocation = new Location(location, getDirection().getVector());
+    public synchronized void ai(Block[][] map) {
+        move(new Location(getX(), getY(), getDirection(), map));
+    }
 
-                location.clear(this);
-                newLocation.set(this);
-                setLocation(newLocation);
+    public boolean isFly() {
+        return isFly;
+    }
 
-                newMoveCldwn();
-            }
-        } catch (IndexOutOfBoundsException e) {
-            setHealth(0);
-        }
+    public void setFly(boolean isFly) {
+        this.isFly = isFly;
     }
 }

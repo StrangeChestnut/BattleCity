@@ -1,7 +1,9 @@
-import frame.MyFrame;
+
+import graphics.BattleCity;
 
 public class Main {
     public static void main(String[] args) {
-        MyFrame gameMyFrame = new MyFrame();
+        //MyFrame game = new MyFrame();
+        BattleCity.main(args);
     }
 }

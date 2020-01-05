@@ -5,39 +5,55 @@ import game.entities.mobiles.*;
 import game.entities.statics.*;
 import game.level.*;
 
-import java.util.Random;
-
-public class Game {
-    private Random random = new Random();
-
+public class Game extends Thread {
     private Status status;
     private Level level;
     private Player player;
 
     public Game(Level level) {
         this.level = level;
-        player = new Player();
-        level.addPlayer(player);
-        status = Status.RUN;
+        this.player = level.getPlayer();
+
+        if (level.getEnemies().isEmpty())
+            level.initTanks();
+        if (level.getPlayer() == null)
+            initPlayer();
+
     }
 
-    public void update() {
+    private void initPlayer() {
+        player = new Player(Level.SPAWN[0],  Level.SPAWN[1]);
+        Location location = new Location(Level.SPAWN[0], Level.SPAWN[1], level.getMap());
+        location.add(player);
+        level.setPlayer(player);
+    }
+
+    private void update() {
         cleanLevel();
 
-        player.update();
-        updateLevel();
+        //updateEntities();
+
+        trySpawn();
+
+        updateStatus();
 
         collision();
-        updateStatus();
+    }
+
+    private void trySpawn() {
+        Tank tank = level.trySpawnTank();
+        while (tank != null) {
+            tank.launchIn(this);
+            tank = level.trySpawnTank();
+        }
     }
 
     private void updateStatus() {
-        // || level.baseIsBreak()
-       if (player.isDead()) {
-           status = Status.LOOSE;
-       } else if (level.enemiesIsDead()) {
-           status = Status.WIN;
-       }
+        if (player.isDead() || level.baseIsBreak()) {
+            status = Status.LOOSE;
+        } else if (level.allEnemiesIsDead()) {
+            status = Status.WIN;
+        }
     }
 
     private void cleanLevel() {
@@ -46,83 +62,59 @@ public class Game {
     }
 
     private void cleanDeadBlocks() {
-        Tile[][] map = level.map();
-        Block block;
-        for (Tile[] tiles : map) {
-            for (Tile tile : tiles) {
-                block = tile.block();
-                if (block.isDead()) block.setType(BlockType.AIR);
+        Block[][] map = level.getMap();
+        for (Block[] blocks : map) {
+            for (Block block : blocks) {
+                if (block.isDead()) {
+                     block.setAir();
+                }
             }
         }
     }
 
     private void cleanDeadMobileEntities() {
-        for (MobileEntity entity : level.entities()) {
-            if (entity.isDead()) level.deleteEntity(entity);
-        }
-    }
-
-    private void updateLevel() {
-        trySpawnTanks();
-        tankAI();
-        entitiesMove();
-    }
-
-    private void trySpawnTanks() {
-        while (level.spawnedTanks().size() < 4 && !level.waitingTanks().isEmpty()) {
-            level.spawnTank();
-        }
-    }
-
-    private void tankAI() {
-        for (Tank tank : level.spawnedTanks()) {
-            if (tank.moveCooldown() == 0) {
-                tank.setDirection(Direction.random());
+        for (Tank tank : level.getTanks()) {
+            Bullet bullet = tank.getBullet();
+            if (bullet.isFly() && bullet.isDead()) {
+                bullet.setFly(false);
             }
-            tryShot(tank);
-        }
-    }
-
-    private void tryShot(Tank tank) {
-        if (random.nextInt(3) == 0 && tank.canShot()) {
-            level.addBullet(tank.shot());
-        }
-        tank.decShotCooldown();
-    }
-
-    private void entitiesMove() {
-        for (MobileEntity entity : level.entities()) {
-            entity.move();
+            if (tank.isDead()) {
+                level.destroy(tank);
+            }
         }
     }
 
     private void collision() {
-        for (Bullet entity : level.bullets()) {
-            if (!entity.isDead()) collision(entity);
+        for (Bullet bullet : level.getBullets()) {
+            if (!bullet.isDead()) {
+                collision(bullet);
+            }
+        }
+        for (Tank  tank: level.getTanks()) {
+            checkControl(tank);
+        }
+    }
+
+    private void checkControl(Tank tank) {
+        if (new Location(tank.getX(), tank.getY(), tank.getDirection(), level.getMap()).isClearToMove()) {
+            tank.setControl(Location.notHave(BlockType.ICE, tank.getX(), tank.getY(), level.getMap()));
+        } else {
+            tank.setControl(true);
         }
     }
 
     private void collision(Bullet bullet) {
-        Location location = bullet.location();
 
-        Tank tank = location.firstTank();
-        if (tank != null && !tank.equals(bullet.tank()) && isDifference(tank, bullet.tank())) {
+        Tank tankToCheck = Location.randomTank(bullet.getX(), bullet.getY(), level.getMap());
+        if (tankToCheck != null && !tankToCheck.isDead() && tankToCheck.isDifferent(bullet)) {
             damage(bullet);
-            damage(tank);
+            damage(tankToCheck);
             return;
         }
 
-        if (tryBreakBlocks(location)) {
+        if (tryBreakBlocks(bullet.getX(), bullet.getY())) {
             damage(bullet);
-            return;
-        }
-
-        for (Bullet bulletToCheck : location.bullets()) {
-            if (isDifference(bullet.tank(), bulletToCheck.tank()) && bullet.flyTo(bulletToCheck)) {
-                damage(bullet);
-                damage(bulletToCheck);
-                return;
-            }
+            //return;
         }
     }
 
@@ -130,16 +122,11 @@ public class Game {
         entity.setHealth(entity.getHealth() - 1);
     }
 
-    private boolean isDifference(Tank tank1, Tank tank2) {
-        return !(tank1.equals(tank2) || (level.hasEnemyTank(tank2) && level.hasEnemyTank(tank1)));
-    }
-
-    private boolean tryBreakBlocks(Location location) {
+    private boolean tryBreakBlocks(int x, int y) {
         boolean broken = false;
-        Block block;
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                block = location.block(i, j);
+                Block block = level.getMap()[x + i][y + j];
                 if (block.isBreakable()) {
                     damage(block);
                     broken = true;
@@ -149,13 +136,46 @@ public class Game {
         return broken;
     }
 
-    public Level level() {
+    @Override
+    public void run() {
+        while (status.isRunning()) {
+            if (status == Status.RUN) {
+                update();
+            }
+            try {
+                Thread.sleep(40);
+            } catch (InterruptedException ignored) {}
+        }
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        for (MobileEntity entity : level.getMobiles()) {
+            entity.launchIn(this);
+        }
+    }
+
+    public Level getLevel() {
         return level;
     }
-    public Player player() {
+
+    public Player getPlayer() {
         return player;
     }
-    public Status status() {
+    public void setPlayer(Player player) {
+        this.player = player;
+        level.setPlayer(player);
+    }
+
+    public Status getStatus() {
         return status;
+    }
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Block[][] getMap() {
+        return level.getMap();
     }
 }
